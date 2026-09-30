@@ -88,8 +88,15 @@ export function decode(b64: string): string {
 
 export type ConvertResult = { ok: true; output: string } | { ok: false; error: string };
 
+/** Conversion runs on every keystroke on the JS thread; cap input so a huge paste cannot freeze the UI. */
+export const MAX_INPUT_CHARS = 100_000;
+
 export function convert(input: string, mode: "encode" | "decode", urlSafe = false): ConvertResult {
+  if (input.length > MAX_INPUT_CHARS) {
+    return { ok: false, error: `Input is longer than ${MAX_INPUT_CHARS.toLocaleString("en-US")} characters` };
+  }
   try {
+
     return { ok: true, output: mode === "encode" ? encode(input, { urlSafe }) : decode(input) };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) };

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
-import { convert } from "../../lib/base64";
+import { convert, MAX_INPUT_CHARS } from "../../lib/base64";
 
 type Mode = "encode" | "decode";
 
@@ -48,6 +48,10 @@ export default function Base64Screen() {
         multiline
         autoCapitalize="none"
         autoCorrect={false}
+        autoComplete="off"
+        spellCheck={false}
+        importantForAutofill="no"
+        maxLength={MAX_INPUT_CHARS + 1}
         value={input}
         onChangeText={setInput}
         accessibilityLabel={mode === "encode" ? "Text to encode" : "Base64 to decode"}
@@ -91,7 +95,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F5F5F5", padding: 16 },
   segment: { flexDirection: "row", backgroundColor: "#E3ECF7", borderRadius: 10, padding: 4, marginBottom: 12 },
   segmentItem: { flex: 1, paddingVertical: 10, borderRadius: 8, alignItems: "center" },
-  segmentActive: { backgroundColor: "#4A90D9" },
+  segmentActive: { backgroundColor: "#2F6DB5" },
   segmentText: { color: "#2A5A8C", fontWeight: "600" },
   segmentTextActive: { color: "#fff" },
   switchRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
@@ -102,9 +106,10 @@ const styles = StyleSheet.create({
   outputError: { borderColor: "#B00020" },
   outputText: { fontSize: 16, color: "#222", fontFamily: "monospace" },
   errorText: { fontSize: 14, color: "#B00020" },
-  meta: { fontSize: 12, color: "#888", marginTop: 4 },
+  meta: { fontSize: 12, color: "#666", marginTop: 4 },
   actions: { flexDirection: "row", gap: 12, marginTop: 16, marginBottom: 32 },
-  button: { flex: 1, backgroundColor: "#4A90D9", borderRadius: 8, paddingVertical: 12, alignItems: "center" },
-  buttonDisabled: { backgroundColor: "#A9C4E6" },
+  button: { flex: 1, backgroundColor: "#2F6DB5", borderRadius: 8, paddingVertical: 12, alignItems: "center" },
+  buttonDisabled: { backgroundColor: "#8A9BB0" },
+
   buttonText: { color: "#fff", fontWeight: "600" },
 });

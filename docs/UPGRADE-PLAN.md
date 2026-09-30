@@ -12,12 +12,11 @@
 ## Backlog
 
 ### P0
-- Persist user data locally (AsyncStorage via `npx expo install
-  @react-native-async-storage/async-storage`) where the feature holds state.
 - Add real app icons (`assets/icon.png`, `assets/adaptive-icon.png`) and
   reference them from `app.json` before any store build.
 
 ### P1
+- Copy output button (`expo-clipboard`, JS API in Expo Go) with a "copied" live-region message.
 - Add component tests (jest-expo + @testing-library/react-native) for the
   main screen.
 - Dark-mode palette (`userInterfaceStyle` is `automatic` but colors are
@@ -41,3 +40,12 @@
   `query-string`).
 - `app.json`: removed references to missing icon files.
 - Removed the placeholder Explore tab.
+
+## Done in this pass (pass 2)
+
+Score: 6/10 (unchanged) — hardening pass. Persistence P0 intentionally dropped: users paste tokens and credentials into Base64 tools, so input is kept in memory only (decision recorded here).
+
+- Privacy/robustness: input is never persisted; the field disables autocomplete, spell-check and Android autofill; conversion is capped at `MAX_INPUT_CHARS` (100k) so a huge paste cannot freeze the JS thread (tested).
+- Accessibility: buttons/segment darkened to #2F6DB5 and meta text to #666 for WCAG AA with white/small text; profile links get link roles.
+- Advisories: `overrides.postcss ^8.5.28` clears the high-severity PostCSS advisory in Expo metro-config (minor bump). Remaining `image-size` (metro, bundler-only), `uuid` (via `xcode`) and `decode-uri-component` (via `query-string@7`) need an Expo SDK major upgrade; deliberately not auto-fixed.
+- Verified: typecheck, lint, 17 vitest tests, Android `expo export` bundle.
