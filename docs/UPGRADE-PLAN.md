@@ -49,3 +49,12 @@ Score: 6/10 (unchanged) — hardening pass. Persistence P0 intentionally dropped
 - Accessibility: buttons/segment darkened to #2F6DB5 and meta text to #666 for WCAG AA with white/small text; profile links get link roles.
 - Advisories: `overrides.postcss ^8.5.28` clears the high-severity PostCSS advisory in Expo metro-config (minor bump). Remaining `image-size` (metro, bundler-only), `uuid` (via `xcode`) and `decode-uri-component` (via `query-string@7`) need an Expo SDK major upgrade; deliberately not auto-fixed.
 - Verified: typecheck, lint, 17 vitest tests, Android `expo export` bundle.
+
+## Done in this pass (pass 3)
+
+Score: 8/10 (was 7.5/10) — edge-case hunt in `lib/base64.ts`.
+
+- Bug: text containing a lone surrogate (half an emoji, common after a truncated paste) was encoded as CESU-8 bytes, so "Use output as input" then failed with "not valid UTF-8". Lone surrogates now encode as U+FFFD, like `TextEncoder`.
+- Bug: the size line counted UTF-16 units ("🎨" = 2 characters). New `sizeLabel` counts code points, pluralises, and shows the UTF-8 byte size when it differs.
+- Regression tests for lone surrogates, 4-byte emoji, BOM / NBSP / U+2028 inside pasted Base64.
+- Verified: typecheck, lint, 21 vitest tests, Android `expo export`.

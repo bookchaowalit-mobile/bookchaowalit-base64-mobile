@@ -9,7 +9,11 @@ const URL_SAFE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789
 export function utf8Encode(text: string): Uint8Array {
   const bytes: number[] = [];
   for (const ch of text) {
-    const cp = ch.codePointAt(0)!;
+    let cp = ch.codePointAt(0)!;
+    // A lone surrogate (e.g. half of an emoji from a truncated paste) is not
+    // encodable as UTF-8; emit U+FFFD like TextEncoder instead of CESU-8
+    // bytes that this app's own decoder would then reject.
+    if (cp >= 0xd800 && cp <= 0xdfff) cp = 0xfffd;
     if (cp < 0x80) bytes.push(cp);
     else if (cp < 0x800) bytes.push(0xc0 | (cp >> 6), 0x80 | (cp & 0x3f));
     else if (cp < 0x10000) bytes.push(0xe0 | (cp >> 12), 0x80 | ((cp >> 6) & 0x3f), 0x80 | (cp & 0x3f));
@@ -76,6 +80,20 @@ export function base64ToBytes(input: string): Uint8Array {
     if (chunk.length > 3) bytes.push(n & 0xff);
   }
   return Uint8Array.from(bytes);
+}
+
+/** Characters as a person counts them (code points: an emoji is 1, not 2). */
+export function charCount(text: string): number {
+  let n = 0;
+  for (const _ of text) n++;
+  return n;
+}
+
+/** "1 character", "3 characters", with UTF-8 byte size for the text side. */
+export function sizeLabel(text: string): string {
+  const n = charCount(text);
+  const bytes = utf8Encode(text).length;
+  return `${n} ${n === 1 ? "character" : "characters"}${bytes !== n ? ` (${bytes} bytes)` : ""}`;
 }
 
 export function encode(text: string, opts: { urlSafe?: boolean } = {}): string {

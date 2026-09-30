@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { base64ToBytes, bytesToBase64, convert, decode, encode, utf8Decode } from "./base64";
+import { base64ToBytes, bytesToBase64, charCount, convert, decode, encode, sizeLabel, utf8Decode, utf8Encode } from "./base64";
 
 const bytes = (s: string) => Uint8Array.from([...s].map((c) => c.charCodeAt(0)));
 
@@ -65,5 +65,26 @@ describe("convert", () => {
   it("wraps errors into a result", () => {
     expect(convert("foo", "encode")).toEqual({ ok: true, output: "Zm9v" });
     expect(convert("@@", "decode")).toMatchObject({ ok: false });
+  });
+});
+
+describe("pass 3 edge cases", () => {
+  it("encodes a lone surrogate as U+FFFD so the output round-trips", () => {
+    const b64 = encode("a\uD83D");
+    expect(Array.from(utf8Encode("\uD83D"))).toEqual([0xef, 0xbf, 0xbd]);
+    expect(decode(b64)).toBe("a\uFFFD");
+    expect(convert(b64, "decode").ok).toBe(true);
+  });
+  it("still encodes a proper surrogate pair as one 4-byte character", () => {
+    expect(Array.from(utf8Encode("😀"))).toEqual([0xf0, 0x9f, 0x98, 0x80]);
+  });
+  it("counts emoji as one character and shows the byte size", () => {
+    expect(charCount("🎨a")).toBe(2);
+    expect(sizeLabel("🎨")).toBe("1 character (4 bytes)");
+    expect(sizeLabel("ab")).toBe("2 characters");
+  });
+  it("ignores BOM, NBSP and U+2028 whitespace inside pasted Base64", () => {
+    expect(decode("\uFEFFaGk=\u2028")).toBe("hi");
+    expect(decode("aG\u00A0k=")).toBe("hi");
   });
 });

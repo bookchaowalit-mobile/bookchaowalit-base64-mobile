@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
-import { convert, MAX_INPUT_CHARS } from "../../lib/base64";
+import { convert, MAX_INPUT_CHARS, sizeLabel } from "../../lib/base64";
 
 type Mode = "encode" | "decode";
 
@@ -65,7 +65,7 @@ export default function Base64Screen() {
       </View>
       {result.ok && (
         <Text style={styles.meta}>
-          {input.length} → {result.output.length} characters
+          {sizeLabel(input)} → {sizeLabel(result.output)}
         </Text>
       )}
 
