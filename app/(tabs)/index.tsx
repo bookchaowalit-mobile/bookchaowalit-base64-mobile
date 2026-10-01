@@ -1,125 +1,115 @@
-import { StyleSheet, Text, View, ScrollView, Pressable } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { Link } from "expo-router";
+import { useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
+import { convert, MAX_INPUT_CHARS, sizeLabel } from "../../lib/base64";
 
-export default function HomeScreen() {
+type Mode = "encode" | "decode";
+
+export default function Base64Screen() {
+  const [mode, setMode] = useState<Mode>("encode");
+  const [urlSafe, setUrlSafe] = useState(false);
+  const [input, setInput] = useState("Hello, สวัสดี 👋");
+
+  const result = convert(input, mode, urlSafe);
+
+  const swap = () => {
+    if (!result.ok) return;
+    setInput(result.output);
+    setMode(mode === "encode" ? "decode" : "encode");
+  };
+
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Base64</Text>
-        <Text style={styles.subtitle}>Base64 — Mobile app (expo)</Text>
-      </View>
-
-      <View style={styles.cardGrid}>
-        <FeatureCard
-          icon="rocket"
-          title="Getting Started"
-          description="Welcome to the mobile version. Start building your experience."
-        />
-        <FeatureCard
-          icon="code"
-          title="Tech Stack"
-          description="Built with Expo, React Native, and TypeScript."
-        />
-        <FeatureCard
-          icon="phone-portrait"
-          title="Cross-Platform"
-          description="Runs on iOS, Android, and Web from a single codebase."
-        />
-      </View>
-
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>
-          Part of Chaowalit Greepoke's 101 Portfolio Projects
-        </Text>
-        <Link href="https://bookchaowalit.com" asChild>
-          <Pressable>
-            <Text style={styles.link}>bookchaowalit.com</Text>
+    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
+      <View style={styles.segment} accessibilityRole="tablist">
+        {(["encode", "decode"] as const).map((m) => (
+          <Pressable
+            key={m}
+            onPress={() => setMode(m)}
+            style={[styles.segmentItem, mode === m && styles.segmentActive]}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: mode === m }}
+          >
+            <Text style={[styles.segmentText, mode === m && styles.segmentTextActive]}>
+              {m === "encode" ? "Text → Base64" : "Base64 → Text"}
+            </Text>
           </Pressable>
-        </Link>
+        ))}
+      </View>
+
+      {mode === "encode" && (
+        <View style={styles.switchRow}>
+          <Text style={styles.label}>URL-safe (-, _ and no padding)</Text>
+          <Switch value={urlSafe} onValueChange={setUrlSafe} accessibilityLabel="URL-safe output" />
+        </View>
+      )}
+
+      <Text style={styles.label}>{mode === "encode" ? "Text (UTF-8)" : "Base64"}</Text>
+      <TextInput
+        style={[styles.input, styles.area]}
+        multiline
+        autoCapitalize="none"
+        autoCorrect={false}
+        autoComplete="off"
+        spellCheck={false}
+        importantForAutofill="no"
+        maxLength={MAX_INPUT_CHARS + 1}
+        value={input}
+        onChangeText={setInput}
+        accessibilityLabel={mode === "encode" ? "Text to encode" : "Base64 to decode"}
+      />
+
+      <Text style={styles.label}>{mode === "encode" ? "Base64" : "Text"}</Text>
+      <View style={[styles.output, !result.ok && styles.outputError]} accessibilityLiveRegion="polite">
+        <Text selectable style={result.ok ? styles.outputText : styles.errorText}>
+          {result.ok ? result.output || " " : result.error}
+        </Text>
+      </View>
+      {result.ok && (
+        <Text style={styles.meta}>
+          {sizeLabel(input)} → {sizeLabel(result.output)}
+        </Text>
+      )}
+
+      <View style={styles.actions}>
+        <Button label="Use output as input" onPress={swap} disabled={!result.ok} />
+        <Button label="Clear" onPress={() => setInput("")} />
       </View>
     </ScrollView>
   );
 }
 
-function FeatureCard({
-  icon,
-  title,
-  description,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  title: string;
-  description: string;
-}) {
+function Button({ label, onPress, disabled }: { label: string; onPress: () => void; disabled?: boolean }) {
   return (
-    <View style={styles.card}>
-      <Ionicons name={icon} size={28} color="#4A90D9" />
-      <Text style={styles.cardTitle}>{title}</Text>
-      <Text style={styles.cardDescription}>{description}</Text>
-    </View>
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      style={[styles.button, disabled && styles.buttonDisabled]}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: !!disabled }}
+    >
+      <Text style={styles.buttonText}>{label}</Text>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F5F5F5",
-  },
-  header: {
-    backgroundColor: "#4A90D9",
-    padding: 24,
-    paddingTop: 16,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#fff",
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "rgba(255,255,255,0.85)",
-    lineHeight: 20,
-  },
-  cardGrid: {
-    padding: 16,
-    gap: 12,
-  },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-    alignItems: "center",
-    gap: 8,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#333",
-  },
-  cardDescription: {
-    fontSize: 14,
-    color: "#666",
-    textAlign: "center",
-    lineHeight: 20,
-  },
-  footer: {
-    padding: 24,
-    alignItems: "center",
-    gap: 8,
-  },
-  footerText: {
-    fontSize: 12,
-    color: "#999",
-  },
-  link: {
-    fontSize: 14,
-    color: "#4A90D9",
-    fontWeight: "500",
-  },
+  container: { flex: 1, backgroundColor: "#F5F5F5", padding: 16 },
+  segment: { flexDirection: "row", backgroundColor: "#E3ECF7", borderRadius: 10, padding: 4, marginBottom: 12 },
+  segmentItem: { flex: 1, paddingVertical: 10, borderRadius: 8, alignItems: "center" },
+  segmentActive: { backgroundColor: "#2F6DB5" },
+  segmentText: { color: "#2A5A8C", fontWeight: "600" },
+  segmentTextActive: { color: "#fff" },
+  switchRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
+  label: { fontSize: 13, color: "#555", marginTop: 8, marginBottom: 4 },
+  input: { backgroundColor: "#fff", borderWidth: 1, borderColor: "#ccc", borderRadius: 8, padding: 12, fontSize: 16 },
+  area: { minHeight: 110, textAlignVertical: "top" },
+  output: { backgroundColor: "#fff", borderRadius: 8, borderWidth: 1, borderColor: "#ccc", padding: 12, minHeight: 80 },
+  outputError: { borderColor: "#B00020" },
+  outputText: { fontSize: 16, color: "#222", fontFamily: "monospace" },
+  errorText: { fontSize: 14, color: "#B00020" },
+  meta: { fontSize: 12, color: "#666", marginTop: 4 },
+  actions: { flexDirection: "row", gap: 12, marginTop: 16, marginBottom: 32 },
+  button: { flex: 1, backgroundColor: "#2F6DB5", borderRadius: 8, paddingVertical: 12, alignItems: "center" },
+  buttonDisabled: { backgroundColor: "#8A9BB0" },
+
+  buttonText: { color: "#fff", fontWeight: "600" },
 });
